@@ -12,59 +12,110 @@ class WeatherPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Weather App')),
+      backgroundColor: Colors.blue.shade50,
+      appBar: AppBar(
+        title: const Text(
+          '🌤️ Weather App',
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.blueAccent,
+      ),
       body: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           children: [
             TextField(
               controller: _controller,
               decoration: InputDecoration(
-                labelText: 'City name',
-                border: OutlineInputBorder(),
+                labelText: 'Şehir adı',
+                hintText: 'Örn: İstanbul',
+                prefixIcon: Icon(Icons.location_city),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                filled: true,
+                fillColor: Colors.white,
               ),
             ),
-            SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                final city = _controller.text;
-                FocusScope.of(context).unfocus();
-                context.read<WeatherBloc>().add(FetchWeather(city));
-              },
-              child: Text('Search'),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final city = _controller.text.trim();
+                  FocusScope.of(context).unfocus();
+                  if (city.isNotEmpty) {
+                    context.read<WeatherBloc>().add(FetchWeather(city));
+                  }
+                },
+                icon: const Icon(Icons.search),
+                label: const Text(
+                  'Hava Durumu Getir',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+              ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 24),
             Expanded(
               child: BlocBuilder<WeatherBloc, WeatherState>(
                 builder: (context, state) {
                   if (state is WeatherInitial) {
-                    return Text('Bir şehir arayın.');
+                    return const Center(
+                      child: Text(
+                        'Lütfen bir şehir adı girin...',
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    );
                   } else if (state is WeatherLoading) {
-                    return Center(child: CircularProgressIndicator());
+                    return const Center(child: CircularProgressIndicator());
                   } else if (state is WeatherLoaded) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          state.weather.name ?? '',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.normal,
+                    final weather = state.weather;
+                    final temp = weather.main?.temp ?? 0;
+                    final icon = temp > 25 ? '☀️' : '🌧️';
+
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(icon, style: const TextStyle(fontSize: 64)),
+                          const SizedBox(height: 10),
+                          Text(
+                            weather.name ?? '',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        Text(
-                          '${state.weather.main?.temp}°C',
-                          style: TextStyle(
-                            fontSize: 50,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 6),
+                          Text(
+                            '$temp°C',
+                            style: const TextStyle(
+                              fontSize: 48,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueAccent,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   } else if (state is WeatherError) {
-                    return Text(state.message);
+                    return Center(
+                      child: Text(
+                        state.message,
+                        style: const TextStyle(color: Colors.red, fontSize: 18),
+                      ),
+                    );
                   }
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 },
               ),
             ),
